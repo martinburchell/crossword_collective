@@ -1,0 +1,42 @@
+.black {
+  background-color: #000;
+}
+table {
+  font-family: sans-serif;
+}
+td {
+  width: 32px;
+  height: 32px;
+  border: thin solid black;
+  text-align: center;
+}
+.clues-col {
+  float: left;
+  margin-left: 1em;
+}
+h1, h4 {
+  margin-top: 0;
+  font-size: 1em;
+}
+h4 {
+  margin-bottom: 0;
+}
+.last h4 {
+  margin-top: 1em;
+}
+.grid {
+  clear: left;
+  float: left;
+}
+ol {
+  list-style-type: none;
+  padding-left: 0;
+}
+td p {
+  float: left;
+  font-family: serif;
+  font-size: x-small;
+  position: relative;
+  left: 0;
+  top: 0;
+}
