@@ -17,7 +17,7 @@ from parser import MyHTMLParser
 from line import Line
 
 class Crossword(object):
-    def __init__(self, home_page, cross_type, data_dir, prefix, serial_number, density, border, border_color, css_filename, smtp_server = None, from_email_address = None, to_email_address = None):
+    def __init__(self, home_page, cross_type, data_dir, prefix, serial_number, density, border, border_color, smtp_server = None, from_email_address = None, to_email_address = None):
         self.home_page = home_page
         self.cross_type = cross_type
 
@@ -30,7 +30,6 @@ class Crossword(object):
         self.border = border
         self.border_color = border_color
         self.basename = self.prefix + "_" + self.serial_number
-        self.css_filename = css_filename
         self.smtp_server = smtp_server
         self.from_email_address = from_email_address
         self.to_email_address = to_email_address
@@ -107,7 +106,7 @@ class Crossword(object):
         png_basename = self.basename + ".png"
         self.png_filename = os.path.join(self.dir, png_basename)
 
-        ok = os.system("convert -density %s %s -trim +repage -colorspace Gray -depth 3 %s" % (self.density, self.pdf_filename, self.png_filename))
+        ok = os.system("convert -density %s %s -trim +repage -colorspace RGB -depth 3 %s" % (self.density, self.pdf_filename, self.png_filename))
 
         if ok == 0:
             image = Image.open(self.png_filename)
