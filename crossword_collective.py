@@ -19,7 +19,7 @@ if os.path.exists(next_quick_filename):
     quick_serial = int(f.read())
     f.close()
 else:
-    quick_serial = 12527
+    quick_serial = 12559
 
 ok = True
 
@@ -43,7 +43,7 @@ if os.path.exists(next_cryptic_filename):
     cryptic_serial = int(f.read())
     f.close()
 else:
-    cryptic_serial = 25054
+    cryptic_serial = 25088
 
 ok = True
     

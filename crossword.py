@@ -106,7 +106,7 @@ class Crossword(object):
         png_basename = self.basename + ".png"
         self.png_filename = os.path.join(self.dir, png_basename)
 
-        ok = os.system("convert -density %s %s -trim +repage -colorspace RGB -depth 3 %s" % (self.density, self.pdf_filename, self.png_filename))
+        ok = os.system("convert -density %s %s[0] -trim +repage -colorspace RGB -depth 3 %s" % (self.density, self.pdf_filename, self.png_filename))
 
         if ok == 0:
             image = Image.open(self.png_filename)
