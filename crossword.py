@@ -71,7 +71,8 @@ class Crossword(object):
             else:
                 if action == "start" and elem.tag == "{%s}a" % XHTML_NAMESPACE:
                     href = elem.get("href")
-                    if href[-4:] == ".pdf":
+
+                    if href != None and href[-4:] == ".pdf":
                         pdf_url = href
                         break
 
@@ -482,8 +483,7 @@ class Crossword(object):
         
         ok = self.create_html()
         if not ok:
-            print "Failed to parse grid"
-            return False
+            print "Failed to parse the HTML version. This isn't crucial so continuing anyway..."
 
         if not self.smtp_server is None:
             ok = self.send_email()
