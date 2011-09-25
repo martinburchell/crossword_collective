@@ -17,6 +17,8 @@ from parser import MyHTMLParser
 from line import Line
 
 class Crossword(object):
+    XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml"
+
     def __init__(self, home_page, cross_type, data_dir, prefix, serial_number, density, border, border_color, smtp_server = None, from_email_address = None, to_email_address = None):
         self.home_page = home_page
         self.cross_type = cross_type
@@ -49,9 +51,6 @@ class Crossword(object):
                                  remove_blank_text=True)
         tree = etree.parse(StringIO.StringIO(content), parser)
 
-        XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml"
-        XHTML = "{%s}" % XHTML_NAMESPACE
-
         clean_content = etree.tostring(tree.getroot())
 
         events = ("start", "end")
@@ -64,12 +63,12 @@ class Crossword(object):
         pdf_url = False
         for action, elem in context:
             if state == 0:
-                if action == "start" and elem.tag == "{%s}p" % XHTML_NAMESPACE:
+                if action == "start" and self.tag_matches(elem, "p"):
                     if elem.get("id") == "stand-first":
                         state = 1
 
             else:
-                if action == "start" and elem.tag == "{%s}a" % XHTML_NAMESPACE:
+                if action == "start" and self.tag_matches(elem, "a"):
                     href = elem.get("href")
 
                     if href != None and href[-4:] == ".pdf":
@@ -100,6 +99,9 @@ class Crossword(object):
             return True
 
         return False
+
+    def tag_matches(self, element, tag):
+        return element.tag == tag or element.tag == "{%s}%s" % (self.XHTML_NAMESPACE, tag)
     
     def convert_to_png(self):
         # Hmmm...
@@ -341,9 +343,6 @@ class Crossword(object):
                                  remove_blank_text=True)
         tree = etree.parse(StringIO.StringIO(content), parser)
 
-        XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml"
-        XHTML = "{%s}" % XHTML_NAMESPACE
-
         clean_content = etree.tostring(tree.getroot())
 
 
@@ -356,22 +355,22 @@ class Crossword(object):
 
         for action, elem in context:
             if state == 0:
-                if action == "start" and elem.tag == "{%s}div" % XHTML_NAMESPACE:
+                if action == "start" and tag_matches(elem, "div"):
                     if elem.get("id") == "box":
                         state = 1
 
             elif state == 1:
-                if action == "end" and elem.tag == "{%s}h1" % XHTML_NAMESPACE:
+                if action == "end" and tag_matches(elem, "h1"):
                     title = elem.text
                     state = 2
 
             elif state == 2:
-                if action == "start" and elem.tag == "{%s}div" % XHTML_NAMESPACE:
+                if action == "start" and tag_matches(elem, "div"):
                     if elem.get("id") == "content":
                         state = 3
 
             elif state == 3:
-                if action == "start" and elem.tag == "{%s}table" % XHTML_NAMESPACE:
+                if action == "start" and tag_matches(elem, "table"):
                     html_file = open(self.html_filename, "w")
                     html_file.write("<h1>%s</h1>\n" % title)
                     html_file.write("<div class=\"grid\">\n")
@@ -382,10 +381,10 @@ class Crossword(object):
                     state = 4
 
             elif state == 4:
-                if action == "start" and elem.tag == "{%s}tr" % XHTML_NAMESPACE:
+                if action == "start" and tag_matches(elem, "tr"):
                     html_file.write("\t\t\t\t<tr>\n")
                     state = 5
-                elif action == "end" and elem.tag == "{%s}table" % XHTML_NAMESPACE:
+                elif action == "end" and tag_matches(elem, "table"):
                     html_file.write("\t\t\t</tbody>\n")
                     html_file.write("\t\t</table>\n")
                     html_file.write("\t</div>\n")
@@ -394,28 +393,28 @@ class Crossword(object):
 
             elif state == 5:
                 if action == "start":
-                    if elem.tag == "{%s}td" % XHTML_NAMESPACE:
+                    if tag_matches(elem, "td"):
                         state = 6
                 elif action == "end":
-                    if elem.tag == "{%s}tr" % XHTML_NAMESPACE:
+                    if tag_matches(elem, "tr"):
                         html_file.write("\t\t\t\t</tr>\n")
                         state = 4
                         
             elif state == 6:
                 if action == "start":
-                    if elem.tag == "{%s}img" % XHTML_NAMESPACE:
+                    if tag_matches(elem, "img"):
                         html_file.write("\t\t\t\t\t<td class=\"black\"><br></td>\n")
 
-                    elif elem.tag == "{%s}span" % XHTML_NAMESPACE:
+                    elif tag_matches(elem, "span"):
                         html_file.write("\t\t\t\t\t<td class=\"white\"><p>%s</p><br></td>\n" % elem.text)
                     state = 5
                 elif action == "end":
-                    if elem.tag == "{%s}td" % XHTML_NAMESPACE:
+                    if tag_matches(elem, "td"):
                         html_file.write("\t\t\t\t\t<td class=\"white\"><br></td>\n")
                         state = 5
                 
             elif state == 7:
-                if action == "start" and elem.tag == "{%s}div" % XHTML_NAMESPACE:
+                if action == "start" and tag_matches(elem, "div"):
                     if elem.get("id") == "clues":
                         clues = etree.tostring(elem, pretty_print=True, method="html")
                         html_file.write(clues)
