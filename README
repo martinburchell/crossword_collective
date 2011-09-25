@@ -1,6 +1,7 @@
 Crossword Collective is a hack to allow people to collaborate remotely
-on the Guardian Crossword via Google Docs. At the moment it only works
-with Firefox.
+on the Guardian Crossword via Google Docs. At the moment it does not
+work because Google have removed the ability to edit HTML and CSS from
+their documents.
 
 Here are some examples I made earlier:
 * https://docs.google.com/Doc?docid=0AXn9GnIYJyz4ZGN2aGZ2Nm1fNjhjbjhqeDhkNg&hl=en_GB&authkey=CJXmtqsG"
