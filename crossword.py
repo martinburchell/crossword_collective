@@ -355,22 +355,22 @@ class Crossword(object):
 
         for action, elem in context:
             if state == 0:
-                if action == "start" and tag_matches(elem, "div"):
+                if action == "start" and self.tag_matches(elem, "div"):
                     if elem.get("id") == "box":
                         state = 1
 
             elif state == 1:
-                if action == "end" and tag_matches(elem, "h1"):
+                if action == "end" and self.tag_matches(elem, "h1"):
                     title = elem.text
                     state = 2
 
             elif state == 2:
-                if action == "start" and tag_matches(elem, "div"):
+                if action == "start" and self.tag_matches(elem, "div"):
                     if elem.get("id") == "content":
                         state = 3
 
             elif state == 3:
-                if action == "start" and tag_matches(elem, "table"):
+                if action == "start" and self.tag_matches(elem, "table"):
                     html_file = open(self.html_filename, "w")
                     html_file.write("<h1>%s</h1>\n" % title)
                     html_file.write("<div class=\"grid\">\n")
@@ -381,10 +381,10 @@ class Crossword(object):
                     state = 4
 
             elif state == 4:
-                if action == "start" and tag_matches(elem, "tr"):
+                if action == "start" and self.tag_matches(elem, "tr"):
                     html_file.write("\t\t\t\t<tr>\n")
                     state = 5
-                elif action == "end" and tag_matches(elem, "table"):
+                elif action == "end" and self.tag_matches(elem, "table"):
                     html_file.write("\t\t\t</tbody>\n")
                     html_file.write("\t\t</table>\n")
                     html_file.write("\t</div>\n")
@@ -393,28 +393,28 @@ class Crossword(object):
 
             elif state == 5:
                 if action == "start":
-                    if tag_matches(elem, "td"):
+                    if self.tag_matches(elem, "td"):
                         state = 6
                 elif action == "end":
-                    if tag_matches(elem, "tr"):
+                    if self.tag_matches(elem, "tr"):
                         html_file.write("\t\t\t\t</tr>\n")
                         state = 4
                         
             elif state == 6:
                 if action == "start":
-                    if tag_matches(elem, "img"):
+                    if self.tag_matches(elem, "img"):
                         html_file.write("\t\t\t\t\t<td class=\"black\"><br></td>\n")
 
-                    elif tag_matches(elem, "span"):
+                    elif self.tag_matches(elem, "span"):
                         html_file.write("\t\t\t\t\t<td class=\"white\"><p>%s</p><br></td>\n" % elem.text)
                     state = 5
                 elif action == "end":
-                    if tag_matches(elem, "td"):
+                    if self.tag_matches(elem, "td"):
                         html_file.write("\t\t\t\t\t<td class=\"white\"><br></td>\n")
                         state = 5
                 
             elif state == 7:
-                if action == "start" and tag_matches(elem, "div"):
+                if action == "start" and self.tag_matches(elem, "div"):
                     if elem.get("id") == "clues":
                         clues = etree.tostring(elem, pretty_print=True, method="html")
                         html_file.write(clues)
