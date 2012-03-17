@@ -8,8 +8,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from lxml import etree
-from lxml.html import fromstring
-from lxml.html.clean import clean_html
+from lxml.html.soupparser import fromstring
+from lxml.cssselect import CSSSelector
 
 from PIL import Image
 
@@ -45,35 +45,16 @@ class Crossword(object):
         
         content = urllib.urlopen(url).read()
 
-        parser = etree.XMLParser(load_dtd=True,
-                                 recover=True,
-                                 remove_comments=True,
-                                 remove_blank_text=True)
-        tree = etree.parse(StringIO.StringIO(content), parser)
+        root = fromstring(content)
 
-        clean_content = etree.tostring(tree.getroot())
-
-        events = ("start", "end")
-
-        context = etree.iterparse(StringIO.StringIO(clean_content),
-                                  events=events)
-
-        state = 0
+        selector = CSSSelector('p#stand-first a')
 
         pdf_url = False
-        for action, elem in context:
-            if state == 0:
-                if action == "start" and self.tag_matches(elem, "p"):
-                    if elem.get("id") == "stand-first":
-                        state = 1
-
-            else:
-                if action == "start" and self.tag_matches(elem, "a"):
-                    href = elem.get("href")
-
-                    if href != None and href[-4:] == ".pdf":
-                        pdf_url = href
-                        break
+        
+        for element in selector(root):
+            href = element.get("href")
+            if href != None and href[-4:] == ".pdf":
+                pdf_url = href
 
         if pdf_url:
             pdf_stream = urllib.urlopen(pdf_url)
@@ -330,99 +311,6 @@ class Crossword(object):
         
         return True
     
-    def create_html(self):
-        html_basename = self.basename + ".html"
-        self.html_filename = os.path.join(self.dir, html_basename)
-
-        url = self.home_page + self.cross_type + "/" + self.serial_number + "/print"
-        content = urllib.urlopen(url).read()
-
-        parser = etree.XMLParser(load_dtd=True,
-                                 recover=True,
-                                 remove_comments=True,
-                                 remove_blank_text=True)
-        tree = etree.parse(StringIO.StringIO(content), parser)
-
-        clean_content = etree.tostring(tree.getroot())
-
-
-        events = ("start", "end")
-
-        context = etree.iterparse(StringIO.StringIO(clean_content),
-                                  events=events)
-
-        state = 0
-
-        for action, elem in context:
-            if state == 0:
-                if action == "start" and self.tag_matches(elem, "div"):
-                    if elem.get("id") == "box":
-                        state = 1
-
-            elif state == 1:
-                if action == "end" and self.tag_matches(elem, "h1"):
-                    title = elem.text
-                    state = 2
-
-            elif state == 2:
-                if action == "start" and self.tag_matches(elem, "div"):
-                    if elem.get("id") == "content":
-                        state = 3
-
-            elif state == 3:
-                if action == "start" and self.tag_matches(elem, "table"):
-                    html_file = open(self.html_filename, "w")
-                    html_file.write("<h1>%s</h1>\n" % title)
-                    html_file.write("<div class=\"grid\">\n")
-                    html_file.write("\t<div>\n")
-                    html_file.write("\t\t<table>\n")
-
-                    html_file.write("\t\t\t<tbody>\n")
-                    state = 4
-
-            elif state == 4:
-                if action == "start" and self.tag_matches(elem, "tr"):
-                    html_file.write("\t\t\t\t<tr>\n")
-                    state = 5
-                elif action == "end" and self.tag_matches(elem, "table"):
-                    html_file.write("\t\t\t</tbody>\n")
-                    html_file.write("\t\t</table>\n")
-                    html_file.write("\t</div>\n")
-                    html_file.write("</div>\n")
-                    state = 7
-
-            elif state == 5:
-                if action == "start":
-                    if self.tag_matches(elem, "td"):
-                        state = 6
-                elif action == "end":
-                    if self.tag_matches(elem, "tr"):
-                        html_file.write("\t\t\t\t</tr>\n")
-                        state = 4
-                        
-            elif state == 6:
-                if action == "start":
-                    if self.tag_matches(elem, "img"):
-                        html_file.write("\t\t\t\t\t<td class=\"black\"><br></td>\n")
-
-                    elif self.tag_matches(elem, "span"):
-                        html_file.write("\t\t\t\t\t<td class=\"white\"><p>%s</p><br></td>\n" % elem.text)
-                    state = 5
-                elif action == "end":
-                    if self.tag_matches(elem, "td"):
-                        html_file.write("\t\t\t\t\t<td class=\"white\"><br></td>\n")
-                        state = 5
-                
-            elif state == 7:
-                if action == "start" and self.tag_matches(elem, "div"):
-                    if elem.get("id") == "clues":
-                        clues = etree.tostring(elem, pretty_print=True, method="html")
-                        html_file.write(clues)
-                        html_file.close()
-                        return True
-
-        return False
-    
     def send_email(self):
         message = MIMEMultipart()
         message["Subject"] = "%s Crossword Number %s " % (self.cross_type.capitalize(), self.serial_number)
@@ -480,10 +368,6 @@ class Crossword(object):
             print "Failed to create CSS"
             return False
         
-        ok = self.create_html()
-        if not ok:
-            print "Failed to parse the HTML version. This isn't crucial so continuing anyway..."
-
         if not self.smtp_server is None:
             ok = self.send_email()
             if not ok:

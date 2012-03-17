@@ -28,10 +28,6 @@ Run the script crossword_collective.py. This should:
 * Create the HTML for the table and the CSS to align the table with the image
 * Email the PNG, HTML and CSS to an address, if specified
 
-This script will also attempt to parse the HTML version of the
-Guardian crossword but because the HTML site on the Guardian website
-is broken, quite often the clues are missing.
-
 
 File Structure
 --------------
@@ -49,7 +45,6 @@ In each crossword directory the files are as follows:
 * <prefix>.png - PNG of the crossword to upload
 * <prefix>_pdf.html - HTML containing the grid
 * <prefix>_pdf.css - CSS for positioning the grid
-* <prefix>.html - HTML version of the crossword (unreliable) - the CSS for this is in the top level directory of the code, file crossword.css
 
 Editing and Sharing the crossword
 ---------------------------------
