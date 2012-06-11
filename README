@@ -71,3 +71,5 @@ TODO
 * Do the PNG conversion without calling ImageMagick os.system()
 * Automate the upload process somehow
 * Remove the need to use Google Docs
+
+
