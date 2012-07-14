@@ -90,7 +90,9 @@ class Crossword(object):
         png_basename = self.basename + ".png"
         self.png_filename = os.path.join(self.dir, png_basename)
 
-        ok = os.system("convert -density %s %s[0] -trim +repage -colorspace RGB -depth 3 %s" % (self.density, self.pdf_filename, self.png_filename))
+        command = "convert -alpha off -density %s %s[0] -trim +repage -format png32 -depth 3 -define png:color-type=2 %s" % (self.density, self.pdf_filename, self.png_filename)
+
+        ok = os.system(command)
 
         if ok == 0:
             image = Image.open(self.png_filename)
