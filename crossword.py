@@ -1,6 +1,7 @@
 import os.path
 import urllib
 import smtplib
+import string
 import StringIO
 
 from email.mime.image import MIMEImage
@@ -13,7 +14,7 @@ from lxml.cssselect import CSSSelector
 
 from PIL import Image
 
-from parser import MyHTMLParser 
+from parser import MyHTMLParser
 from line import Line
 
 class Crossword(object):
@@ -42,7 +43,7 @@ class Crossword(object):
 
     def download_pdf(self):
         url = self.home_page + self.cross_type + "/" + self.serial_number
-        
+
         content = urllib.urlopen(url).read()
 
         root = fromstring(content)
@@ -50,7 +51,7 @@ class Crossword(object):
         selector = CSSSelector('p#stand-first a')
 
         pdf_url = False
-        
+
         for element in selector(root):
             href = element.get("href")
             if href != None and href[-4:] == ".pdf":
@@ -60,12 +61,16 @@ class Crossword(object):
             pdf_stream = urllib.urlopen(pdf_url)
 
             pdf_basename = pdf_url[pdf_url.rfind("/") + 1:]
+            valid_chars = "-_.%s%s" % (string.ascii_letters, string.digits)
+
+            pdf_basename = ''.join(c for c in pdf_basename if c in valid_chars)
+
             self.basename = pdf_basename[:-4]
             self.pdf_filename = os.path.join(self.dir, pdf_basename)
 
             self.mkdir(self.dir)
             pdf_file = open(self.pdf_filename, "w")
-                            
+
             while True:
                 buffer = pdf_stream.read(1024)
 
@@ -83,7 +88,7 @@ class Crossword(object):
 
     def tag_matches(self, element, tag):
         return element.tag == tag or element.tag == "{%s}%s" % (self.XHTML_NAMESPACE, tag)
-    
+
     def convert_to_png(self):
         # Hmmm...
 
@@ -98,7 +103,7 @@ class Crossword(object):
             image = Image.open(self.png_filename)
             self.image_width = image.size[0]
             self.image_height = image.size[1]
-        
+
         return (ok == 0)
 
     def find_grid(self):
@@ -152,10 +157,10 @@ class Crossword(object):
                 if previous_y == None or line.start_y - previous_y > 1:
                     num_grid_lines += 1
                     previous_y = line.start_y
-                    
+
                 if first_y == None:
                     first_y = line
-                    
+
                 last_y = line
 
         self.grid_x = first_y.start_x
@@ -189,7 +194,7 @@ class Crossword(object):
             image_out = Image.new(image_in.mode,
                                   (width_out, height_out),
                                   self.border_color)
-            
+
             grid_box = (0, 0, self.image_width, grid_height)
 
             grid = image_in.crop(grid_box)
@@ -208,15 +213,15 @@ class Crossword(object):
                                   self.border_color)
 
             image_out.paste(image_in, (self.border, self.border))
-            
+
 
         self.image_width = width_out
         self.image_height = height_out
         self.grid_x += self.border
         self.grid_y += self.border
-        
+
         image_out.save(self.png_filename);
-            
+
         return True
 
     def create_pdf_html(self):
@@ -250,7 +255,7 @@ class Crossword(object):
                 else:
                     # white
                     n = n + 1
-                    
+
                 squares[square_x][square_y] = n
 
         for square_y in range (0, self.grid_size):
@@ -263,7 +268,7 @@ class Crossword(object):
 
                 html_file.write("\t\t\t\t\t<td class=\"%s\"><br></td>\n" % cell_class)
             html_file.write("\t\t\t\t</tr>\n")
-                
+
         html_file.write("\t\t\t</tbody>\n")
         html_file.write("\t\t</table>\n")
         html_file.write("\t</div>\n")
@@ -310,9 +315,9 @@ class Crossword(object):
         css_file.write("}\n")
 
         css_file.close()
-        
+
         return True
-    
+
     def send_email(self):
         message = MIMEMultipart()
         message["Subject"] = "%s Crossword Number %s " % (self.cross_type.capitalize(), self.serial_number)
@@ -336,7 +341,7 @@ class Crossword(object):
 #        server.set_debuglevel(1)
         server.sendmail(self.from_email_address, self.to_email_address, message.as_string())
         server.quit
-        
+
         return True
 
     def create(self):
@@ -359,21 +364,21 @@ class Crossword(object):
         if not ok:
             print "Failed to reformat"
             return False
-            
+
         ok = self.create_pdf_html()
         if not ok:
             print "Failed to create HTML"
             return False
-        
+
         ok = self.create_pdf_css()
         if not ok:
             print "Failed to create CSS"
             return False
-        
+
         if not self.smtp_server is None:
             ok = self.send_email()
             if not ok:
                 print "Failed to send email"
                 return False
-            
+
         return True
